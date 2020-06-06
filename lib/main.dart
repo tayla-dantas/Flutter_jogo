@@ -52,6 +52,10 @@ class GameObject {
   }
 }
 
+class CollidableGameObject extends GameObject{
+  List<GameObject>collidingObject = [];
+}
+
 class SpaceShooterGame extends Game{
 
   final Size screenSize;
@@ -63,8 +67,8 @@ class SpaceShooterGame extends Game{
 
   static const enemy_speed = 200;
   static const shoot_speed = -500;
-  List<GameObject> enemies = [];
-  List<GameObject> shoots = [];
+  List<CollidableGameObject> enemies = [];
+  List<CollidableGameObject> shoots = [];
 
   Random random = Random();
 
@@ -76,7 +80,7 @@ class SpaceShooterGame extends Game{
     enemyCreator = Timer(1.0, repeat: true, callback: (){
 
       enemies.add(
-        GameObject()
+        CollidableGameObject()
             ..position = Rect.fromLTWH((screenSize.width - 50) * random.nextDouble(), 0, 50, 50)
 
       );
@@ -86,7 +90,7 @@ class SpaceShooterGame extends Game{
 
     shootCreator = Timer(0.5, repeat: true, callback: (){
       shoots.add(
-          GameObject()
+          CollidableGameObject()
             ..position = Rect.fromLTWH(player.position.left + 20, player.position.top - 20, 20, 20)
 
       );
@@ -122,14 +126,25 @@ class SpaceShooterGame extends Game{
     shoots.forEach((shoot) {
 
       shoot.position = shoot.position.translate(0, shoot_speed * dt);
+      enemies.forEach((enemy) {
+        if(shoot.position.overlaps(enemy.position)){
+          shoot.collidingObject.add(enemy);
+          enemy.collidingObject.add(shoot);
+        }
+
+      });
 
     });
 
     enemyCreator.update(dt);
     shootCreator.update(dt);
 
-    enemies.removeWhere((enemy) => enemy.position.top >= screenSize.height);
-    shoots.removeWhere((shoot) => shoot.position.bottom <= 0);
+    enemies.removeWhere((enemy) {
+     return enemy.position.top >= screenSize.height || enemy.collidingObject.isNotEmpty;
+    });
+    shoots.removeWhere((shoot){
+     return shoot.position.bottom <= 0 || shoot.collidingObject.isNotEmpty;
+    });
   }
 
   @override
