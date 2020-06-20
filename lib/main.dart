@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flame/game.dart';
 import 'package:flame/time.dart';
 import 'package:flame/flame.dart';
+import 'package:flame/animation.dart' as FlameAnimation;
 
 import 'dart:math';
 
@@ -56,11 +57,28 @@ class CollidableGameObject extends GameObject{
   List<GameObject>collidingObject = [];
 }
 
+class AnimationGameObject {
+  Rect position;
+  FlameAnimation.Animation animation;
+
+  void render(Canvas canvas){
+    if(animation.loaded()){
+      animation.getSprite().renderRect(canvas, position);
+    }
+  }
+
+  void update(double dt){
+
+    animation.update(dt);
+
+  }
+}
+
 class SpaceShooterGame extends Game{
 
   final Size screenSize;
 
-  GameObject player;
+  AnimationGameObject player;
 
   Timer enemyCreator;
   Timer shootCreator;
@@ -74,8 +92,9 @@ class SpaceShooterGame extends Game{
 
 
   SpaceShooterGame(this.screenSize){
-    player = GameObject()
-        ..position = Rect.fromLTWH(200, 200, 100, 100);
+    player = AnimationGameObject()
+        ..position = Rect.fromLTWH(100 , 500, 50, 50)
+        ..animation = FlameAnimation.Animation.sequenced("player.png", 4, textureWidth: 32, textureHeight: 48);
 
     enemyCreator = Timer(1.0, repeat: true, callback: (){
 
@@ -138,6 +157,7 @@ class SpaceShooterGame extends Game{
 
     enemyCreator.update(dt);
     shootCreator.update(dt);
+    player.update(dt);
 
     enemies.removeWhere((enemy) {
      return enemy.position.top >= screenSize.height || enemy.collidingObject.isNotEmpty;
